@@ -1,0 +1,27 @@
+# Altyapi: PostgreSQL (account_db, transaction_db), Kafka (KRaft), Redis
+# Baslatmak icin: docker compose up -d
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    # Host'ta 5433: bilgisayarda kurulu yerel PostgreSQL 5432'yi kullaniyor
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - postgres-data:/var/lib/postgresql/data
+
+  kafka:
+    image: apache/kafka:4.1.0
+    ports:
+      - "9092:9092"
+
+  redis:
+    image: redis:8
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres-data:

@@ -1,0 +1,46 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: transaction-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/transaction_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      acks: all
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: transaction-service
+      auto-offset-reset: earliest
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: com.transaction_service.events.FraudCheckResultEvent
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 3000
+            read-timeout: 5000
+
+app:
+  services:
+    account-service:
+      url: ${ACCOUNT_SERVICE_URL:http://localhost:8081}
+  kafka:
+    topics:
+      transaction-initiated: transaction-initiated
+      fraud-check-results: fraud-check-results
+      transaction-events: transaction-events

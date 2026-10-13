@@ -1,0 +1,108 @@
+### Banking System - uctan uca test (IntelliJ HTTP Client)
+### Istekleri yukaridan asagiya sirayla calistirin (her istegin solundaki yesil ok).
+### Tum istekler api-gateway (8080) uzerinden gider.
+
+@gateway = http://localhost:8080/api/v1
+
+### 1) Gonderen hesap olustur (SAVING: gunluk limit 100.000)
+POST {{gateway}}/accounts
+Content-Type: application/json
+
+{
+  "accountHolderName": "Ali Yilmaz",
+  "email": "ali.{{$random.integer(1, 1000000)}}@test.com",
+  "phone": "5551112233",
+  "accountType": "SAVING",
+  "initialDeposit": 100000
+}
+
+> {%
+    client.test("Hesap olusturuldu", () => client.assert(response.status === 201));
+    client.global.set("from", response.body.accountNumber);
+%}
+
+### 2) Alici hesap olustur
+POST {{gateway}}/accounts
+Content-Type: application/json
+
+{
+  "accountHolderName": "Ayse Demir",
+  "email": "ayse.{{$random.integer(1, 1000000)}}@test.com",
+  "phone": "5554445566",
+  "accountType": "CURRENT",
+  "initialDeposit": 500
+}
+
+> {%
+    client.test("Hesap olusturuldu", () => client.assert(response.status === 201));
+    client.global.set("to", response.body.accountNumber);
+%}
+
+### 3) Basarili transfer -> PENDING doner, 1-2 sn sonra COMPLETED olur
+POST {{gateway}}/transactions/transfer
+Content-Type: application/json
+
+{
+  "fromAccountNumber": "{{from}}",
+  "toAccountNumber": "{{to}}",
+  "amount": 1000
+}
+
+> {%
+    client.test("Transfer kabul edildi", () => client.assert(response.status === 202));
+    client.global.set("txOk", response.body.id);
+%}
+
+### 4) Transfer durumu (beklenen: COMPLETED)
+GET {{gateway}}/transactions/{{txOk}}
+
+### 5) Fraud: 50.000 ustu tek transfer -> FAILED, para iade edilir
+POST {{gateway}}/transactions/transfer
+Content-Type: application/json
+
+{
+  "fromAccountNumber": "{{from}}",
+  "toAccountNumber": "{{to}}",
+  "amount": 60000
+}
+
+> {% client.global.set("txFraud", response.body.id); %}
+
+### 6) Fraud transfer durumu (beklenen: FAILED, "Fraud detected")
+GET {{gateway}}/transactions/{{txFraud}}
+
+### 7) Bakiyeler (beklenen: gonderen 99000, alici 1500)
+GET {{gateway}}/accounts/{{from}}/balance
+
+###
+GET {{gateway}}/accounts/{{to}}/balance
+
+### 8) Hesap hareketleri
+GET {{gateway}}/transactions/account/{{from}}
+
+### 9) Yetersiz bakiye -> 422
+POST {{gateway}}/transactions/transfer
+Content-Type: application/json
+
+{
+  "fromAccountNumber": "{{to}}",
+  "toAccountNumber": "{{from}}",
+  "amount": 999999
+}
+
+### 10) Validasyon hatasi -> 400 (alan bazli hata listesi)
+POST {{gateway}}/accounts
+Content-Type: application/json
+
+{
+  "accountHolderName": "",
+  "email": "gecersiz-mail",
+  "accountType": "SAVING",
+  "initialDeposit": -5
+}
+
+### 11) Guvenlik: ic SAGA endpoint'i disaridan cagrilamaz -> 403
+PUT {{gateway}}/accounts/{{to}}/credit?amount=1000000
+
+### 12) Olmayan hesap -> 404
+GET {{gateway}}/accounts/000000000000

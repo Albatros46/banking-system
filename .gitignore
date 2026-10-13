@@ -1,0 +1,31 @@
+# Build-Ausgaben
+target/
+build/
+dist/
+dist-ssr/
+
+# Abhängigkeiten
+node_modules/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.vs/
+*.swp
+
+# Von Spring Initializr generierte Hilfedateien
+HELP.md
+
+# Logs & lokale Dateien
+*.log
+logs/
+*.local
+.env
+.env.*
+
+# Betriebssystem
+.DS_Store
+Thumbs.db
