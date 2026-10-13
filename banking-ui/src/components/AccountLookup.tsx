@@ -130,7 +130,7 @@ function TransactionTable({ transactions, accountNumber }: { transactions: Trans
             return (
               <tr key={tx.id}>
                 <td className="py-2 pr-4 whitespace-nowrap text-slate-600">{formatDate(tx.createdAt)}</td>
-                <td className="py-2 pr-4 font-mono">
+                <td className="py-2 pr-4 font-mono whitespace-nowrap">
                   {outgoing ? '→ ' : '← '}
                   {formatAccountNumber(outgoing ? tx.toAccountNumber : tx.fromAccountNumber)}
                 </td>

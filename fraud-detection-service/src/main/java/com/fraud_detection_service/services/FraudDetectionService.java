@@ -12,6 +12,10 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.util.Locale;
+
 /*
     SAGA Step 2/3 - transaction-initiated -> kontrol -> fraud-check-results
  */
@@ -39,7 +43,7 @@ public class FraudDetectionService {
         FraudCheckResultEvent result;
         if (event.amount().compareTo(fraudProperties.maxSingleAmount()) > 0) {
             result = new FraudCheckResultEvent(event.transactionId(), true,
-                    "Betrag überschreitet das Limit pro Überweisung von " + fraudProperties.maxSingleAmount() + " €");
+                    "Betrag überschreitet das Limit pro Überweisung von " + formatEuro(fraudProperties.maxSingleAmount()));
         } else if (isVelocityExceeded(event.fromAccountNumber())) {
             result = new FraudCheckResultEvent(event.transactionId(), true,
                     "Zu viele Überweisungen innerhalb von " + fraudProperties.velocityWindow().toSeconds() + " Sekunden");
@@ -55,6 +59,13 @@ public class FraudDetectionService {
         }
         // Sonuc gonderilemezse exception -> event tekrar islenir (aksi halde transfer PENDING'de kalir)
         kafkaTemplate.send(fraudCheckResultsTopic, event.transactionId(), result).join();
+    }
+
+    // 50000 -> "50.000 €" (NumberFormat thread-safe degil, her seferinde yeni olustur)
+    private static String formatEuro(BigDecimal amount) {
+        NumberFormat format = NumberFormat.getCurrencyInstance(Locale.GERMANY);
+        format.setMaximumFractionDigits(0);
+        return format.format(amount);
     }
 
     // Redis sayaci: ilk transferde pencere suresi kadar TTL atanir, sure dolunca sayac sifirlanir

@@ -12,8 +12,21 @@ Ein Online-Banking-System auf Basis einer **Microservice-Architektur**. Kunden k
 
 ---
 
+## Screenshots
+
+| Überweisung mit Live-Status | Betrugsverdacht mit automatischer Rückerstattung |
+|---|---|
+| ![Überweisung](docs/screenshots/ueberweisung.png) | ![Betrugsverdacht](docs/screenshots/betrugsverdacht.png) |
+
+| Kontoabfrage mit Kontoumsätzen | Konto eröffnen |
+|---|---|
+| ![Kontoabfrage](docs/screenshots/kontoabfrage.png) | ![Konto eröffnen](docs/screenshots/konto-eroeffnen.png) |
+
+---
+
 ## Inhalt
 
+- [Screenshots](#screenshots)
 - [Funktionen](#funktionen)
 - [Architektur](#architektur)
 - [Technologien](#technologien)
